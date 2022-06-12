@@ -2,43 +2,66 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <style></style>
+  <style>
+    #map { height: 98vh; }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+  integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+  crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+  integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+  crossorigin=""></script>
 </head>
 <body>
-<svg></svg>
-<script src="https://d3js.org/d3.v7.min.js"></script>
+    <div id="map"></div>
+    <!-- <svg></svg> -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 
-<script>
+    <script>
+        var map = new L.Map("map", {center: [1.352083, 103.851959], zoom: 12})
+        .addLayer(new L.TileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"));
 
-let width = 1000, height = 600;
+        var svg = d3.select(map.getPanes().overlayPane).append("svg"),
+        g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
-let svg = d3.select("svg")
-    .attr("viewBox", "0 0 " + width + " " + height)
+        // let width = 1200, height = 600;
 
-// Load external data
-Promise.all([d3.json("sgmap.json"), d3.csv("population2021.csv")]).then(data => {
+        // let svg = d3.select("svg")
+        //     .attr("viewBox", "0 0 " + width + " " + height)
 
-    console.log(data[0]);
-    console.log(data[1]);
+        // Load external data
+        Promise.all([d3.json("sgmap.json"), d3.csv("population2021.csv")]).then(data => {
 
-    // Map and projection
-    var projection = d3.geoMercator()
-        .center([103.851959, 1.290270])
-        .fitExtent([[20, 20], [980, 580]], data[0]);
+            console.log(data[0]);
+            console.log(data[1]);
 
-    let geopath = d3.geoPath().projection(projection);
+            // // Map and projection
+            // var projection = d3.geoMercator()
+            //     .center([103.851959, 1.290270])
+            //     .fitExtent([[20, 20], [980, 580]], data[0]);
 
-    svg.append("g")
-        .attr("id", "districts")
-        .selectAll("path")
-        .data(data[0].features)
-        .enter()
-        .append("path")
-        .attr("d", geopath)
-        .attr("fill", "black");
-})
+            // let geopath = d3.geoPath().projection(projection);
 
-</script>
+            // svg.append("g")
+            //     .attr("id", "districts")
+            //     .selectAll("path")
+            //     .data(data[0].features)
+            //     .enter()
+            //     .append("path")
+            //     .attr("d", geopath)
+            //     .attr("fill", "black");
+
+            let SingAreasLayer = L.geoJson(data[0], { //instantiates a new geoJson layer using built in geoJson handling
+                weight: 2, //Attributes of polygons including the weight of boundaries and colors of map.
+                color: "#432",
+            }).bindPopup(function (Layer) { //binds a popup when clicking on each polygon to access underlying data
+                return Layer.feature.properties.Name;
+            }).addTo(map); //Adds the layer to the map.
+
+        
+        })
+
+    </script>
 
 </body>
 </html>
