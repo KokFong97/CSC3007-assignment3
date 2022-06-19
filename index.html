@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <style>
     #map { height: 98vh; }
+    .legendOrdinal{
+        position: fixed;
+        bottom: 100px;
+        right: 100px;
+    }
+    
 
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
@@ -16,41 +22,84 @@
 <body>
     <div id="map"></div>
     <!-- <svg></svg> -->
+    <div id="tool_tip"></div>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"></script>
 
     <script>
         var map = new L.Map("map", {center: [1.352083, 103.851959], zoom: 12})
         .addLayer(new L.TileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"));
-
+        L.svg({clickable:true}).addTo(map)
         var svg = d3.select(map.getPanes().overlayPane).append("svg"),
         g = svg.append("g").attr("class", "leaflet-zoom-hide");
+        var svg2 = d3.select('.leaflet-bottom.leaflet-left').append("svg");
+        svg2.append("g")
+        .attr("class", "legendOrdinal")
+        .attr("transform", "translate(20,20)");
 
         // Load external data
         Promise.all([d3.json("sgmap.json"), d3.csv("population2021.csv")]).then(data => {
 
+            for(let i=0; i< data[0].features.length;i++){
+                for(let j=0;j<data[1].length;j++){
+                    if(data[1][j].Subzone.toUpperCase() === data[0].features[i].properties['Subzone Name'].toUpperCase()){
+                        data[0].features[i].properties['Population'] = data[1][j].Population
+                    }
+                }
+            }
+            
             console.log(data[0]);
             console.log(data[1]);
 
             var transform = d3.geoTransform({point: projectPoint}),
             path = d3.geoPath().projection(transform);
 
+            let regionArray = []
+            for(let i=0; i< data[0].features.length;i++){
+                if (!regionArray.includes(data[0].features[i].properties['Region Name'])){
+                    regionArray.push(data[0].features[i].properties['Region Name'])
+                }
+            }
+
+            var myColor = d3.scaleOrdinal().domain(regionArray)
+            .range(d3.schemeSet1);
+
+            var legendOrdinal = d3.legendColor().scale(myColor);
+
+            svg2.select(".legendOrdinal")
+	  	    .call(legendOrdinal);
+
+            var tooltip = d3.select("#tool_tip")
+            .append("div")
+                .style("position", "absolute")
+                .style("visibility", "hidden")
+                .text("null");
+            
             var feature = g.selectAll("path")
                 .data(data[0].features)
                 .enter().append("path")
-                .attr('fill-opacity', 0.3)
+                .attr('subzone', function(d){return d.properties['Subzone Name']})
+                .attr('region_name',function(d){return d.properties['Region Name']})
+                .attr('population',function(d){if(d.properties['Population'] == '-'){return "0"}else{return d.properties['Population']}})
+                .attr('fill-opacity', 0.8)
                 .attr('stroke', 'black')
-                .attr("z-index", 3000)
                 .attr('stroke-width', 2.5)
+                .attr("style","pointer-events:auto")
+                .attr('fill', function(d){return myColor(d.properties['Region Name']);})
                 .on("mouseover", function(d){
-                    console.log("test")
-                    d3.select(this).attr("fill", "red")
+                    d3.select(this).attr('fill-opacity', 0);
+                    return tooltip.style("visibility", "visible");
+                })
+                .on("mousemove",function(d){
+                    return tooltip.style("top", (event.pageY-40)+"px").style("left",(event.pageX+20)+"px").style("visibility", "visible").style("border-style", "solid").style("border","1").style("padding","10px").style("background-color","white").style("z-index","3000").text(this.attributes.subzone.nodeValue+", Population - "+this.attributes.population.nodeValue) ;
                 })
                 .on("mouseout", function(d){
-                    d3.select(this).attr("fill", "black")
-                });;
+                    d3.select(this).attr("fill", function(d){return myColor(d.properties['Region Name']);}).attr("fill-opacity",0.8)
+                    return tooltip.style("visibility", "hidden");
+                })
                 
 
-            map.on("moveend", reset);
+            map.on("zoomend", reset);
             reset();
 
             // Reposition the SVG to cover the features.
