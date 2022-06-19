@@ -43,8 +43,13 @@
             for(let i=0; i< data[0].features.length;i++){
                 for(let j=0;j<data[1].length;j++){
                     if(data[1][j].Subzone.toUpperCase() === data[0].features[i].properties['Subzone Name'].toUpperCase()){
-                        data[0].features[i].properties['Population'] = data[1][j].Population
+                        if(data[1][j]['Planning Area'].toUpperCase() === data[0].features[i].properties['Planning Area Name'].toUpperCase()){
+                            data[0].features[i].properties['Population'] = data[1][j].Population
+                        }
                     }
+                }
+                if (!('Population' in data[0].features[i].properties)){
+                    data[0].features[i].properties['Population'] = "0"
                 }
             }
             
@@ -54,15 +59,15 @@
             var transform = d3.geoTransform({point: projectPoint}),
             path = d3.geoPath().projection(transform);
 
-            let regionArray = []
-            for(let i=0; i< data[0].features.length;i++){
-                if (!regionArray.includes(data[0].features[i].properties['Region Name'])){
-                    regionArray.push(data[0].features[i].properties['Region Name'])
+            let maxPopulation = 0
+            for(let i=0; i<data[1].length;i++){
+                if (parseInt(data[1][i]['Population']) > maxPopulation){
+                    maxPopulation = parseInt(data[1][i]['Population'])
                 }
             }
 
-            var myColor = d3.scaleOrdinal().domain(regionArray)
-            .range(d3.schemeSet1);
+            var myColor = d3.scaleSequential().interpolator(d3.interpolateReds)
+            .domain([0,maxPopulation]);
 
             var legendOrdinal = d3.legendColor().scale(myColor);
 
@@ -80,12 +85,12 @@
                 .enter().append("path")
                 .attr('subzone', function(d){return d.properties['Subzone Name']})
                 .attr('region_name',function(d){return d.properties['Region Name']})
-                .attr('population',function(d){if(d.properties['Population'] == '-'){return "0"}else{return d.properties['Population']}})
+                .attr('population',function(d){if(d.properties['Population'] === '-'){return "0"}else{return d.properties['Population']}})
                 .attr('fill-opacity', 0.8)
                 .attr('stroke', 'black')
                 .attr('stroke-width', 2.5)
                 .attr("style","pointer-events:auto")
-                .attr('fill', function(d){return myColor(d.properties['Region Name']);})
+                .attr('fill', function(d){if(d.properties['Population'] === '-'){return myColor(0);}else{return myColor(d.properties['Population'])}})
                 .on("mouseover", function(d){
                     d3.select(this).attr('fill-opacity', 0);
                     return tooltip.style("visibility", "visible");
@@ -94,7 +99,7 @@
                     return tooltip.style("top", (event.pageY-40)+"px").style("left",(event.pageX+20)+"px").style("visibility", "visible").style("border-style", "solid").style("border","1").style("padding","10px").style("background-color","white").style("z-index","3000").text(this.attributes.subzone.nodeValue+", Population - "+this.attributes.population.nodeValue) ;
                 })
                 .on("mouseout", function(d){
-                    d3.select(this).attr("fill", function(d){return myColor(d.properties['Region Name']);}).attr("fill-opacity",0.8)
+                    d3.select(this).attr("fill", function(d){if(d.properties['Population'] == '-'){return myColor(0);}else{return myColor(d.properties['Population'])}}).attr("fill-opacity",0.8)
                     return tooltip.style("visibility", "hidden");
                 })
                 

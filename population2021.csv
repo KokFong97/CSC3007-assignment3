@@ -1,4 +1,4 @@
-Subzone,Planning Area,Population
+Subzone,PlanningArea,Population
 Admiralty,Sembawang,13480
 Airport Road,Paya Lebar,-
 Alexandra Hill,Bukit Merah,13150
@@ -8,7 +8,7 @@ Anak Bukit,Bukit Timah,21220
 Anchorvale,Sengkang,50050
 Ang Mo Kio Town Centre,Ang Mo Kio,4760
 Anson,Downtown Core,80
-Bahar,Western Water Catchment,-
+WESTERN WATER CATCHMENT,Western Water Catchment,-
 Balestier,Novena,32020
 Bangkit,Bukit Panjang,21680
 Bayfront Subzone,Downtown Core,-
@@ -56,7 +56,6 @@ Chong Boon,Ang Mo Kio,25800
 City Hall,Downtown Core,90
 City Terminals,Bukit Merah,20
 Clarke Quay,Singapore River,100
-Cleantech,Western Water Catchment,-
 Clementi Central,Clementi,14390
 Clementi North,Clementi,27870
 Clementi West,Clementi,14770
@@ -174,7 +173,6 @@ Moulmein,Novena,9380
 Mount Emily,Rochor,1690
 Mount Pleasant,Novena,700
 Mountbatten,Marine Parade,9540
-Murai,Western Water Catchment,610
 Nassim,Tanglin,9350
 National University Of S'pore,Queenstown,220
 Nature Reserve,Bukit Panjang,3790
