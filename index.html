@@ -43,7 +43,7 @@
             for(let i=0; i< data[0].features.length;i++){
                 for(let j=0;j<data[1].length;j++){
                     if(data[1][j].Subzone.toUpperCase() === data[0].features[i].properties['Subzone Name'].toUpperCase()){
-                        if(data[1][j]['PlanningArea'].toUpperCase() === data[0].features[i].properties['Planning Area Name'].toUpperCase()){
+                        if(data[1][j].PlanningArea.toUpperCase() === data[0].features[i].properties['Planning Area Name'].toUpperCase()){
                             data[0].features[i].properties['Population'] = data[1][j].Population
                         }
                     }
