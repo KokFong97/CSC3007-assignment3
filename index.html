@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <style>
     #map { height: 98vh; }
+
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
   integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
@@ -24,41 +25,57 @@
         var svg = d3.select(map.getPanes().overlayPane).append("svg"),
         g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
-        // let width = 1200, height = 600;
-
-        // let svg = d3.select("svg")
-        //     .attr("viewBox", "0 0 " + width + " " + height)
-
         // Load external data
         Promise.all([d3.json("sgmap.json"), d3.csv("population2021.csv")]).then(data => {
 
             console.log(data[0]);
             console.log(data[1]);
 
-            // // Map and projection
-            // var projection = d3.geoMercator()
-            //     .center([103.851959, 1.290270])
-            //     .fitExtent([[20, 20], [980, 580]], data[0]);
+            var transform = d3.geoTransform({point: projectPoint}),
+            path = d3.geoPath().projection(transform);
 
-            // let geopath = d3.geoPath().projection(projection);
+            var feature = g.selectAll("path")
+                .data(data[0].features)
+                .enter().append("path")
+                .attr('fill-opacity', 0.3)
+                .attr('stroke', 'black')
+                .attr("z-index", 3000)
+                .attr('stroke-width', 2.5)
+                .on("mouseover", function(d){
+                    console.log("test")
+                    d3.select(this).attr("fill", "red")
+                })
+                .on("mouseout", function(d){
+                    d3.select(this).attr("fill", "black")
+                });;
+                
 
-            // svg.append("g")
-            //     .attr("id", "districts")
-            //     .selectAll("path")
-            //     .data(data[0].features)
-            //     .enter()
-            //     .append("path")
-            //     .attr("d", geopath)
-            //     .attr("fill", "black");
+            map.on("moveend", reset);
+            reset();
 
-            let SingAreasLayer = L.geoJson(data[0], { //instantiates a new geoJson layer using built in geoJson handling
-                weight: 2, //Attributes of polygons including the weight of boundaries and colors of map.
-                color: "#432",
-            }).bindPopup(function (Layer) { //binds a popup when clicking on each polygon to access underlying data
-                return Layer.feature.properties.Name;
-            }).addTo(map); //Adds the layer to the map.
+            // Reposition the SVG to cover the features.
+            function reset() {
+                var bounds = path.bounds(data[0]),
+                    topLeft = bounds[0],
+                    bottomRight = bounds[1];
+                console.log(bounds)
 
-        
+                svg.attr("width", bottomRight[0] - topLeft[0])
+                    .attr("height", bottomRight[1] - topLeft[1])
+                    .style("left", topLeft[0] + "px")
+                    .style("top", topLeft[1] + "px");
+
+                g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+                feature.attr("d", path)
+                
+            }
+
+            // Use Leaflet to implement a D3 geometric transformation.
+            function projectPoint(x, y) {
+                var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+                this.stream.point(point.x, point.y);
+            }
         })
 
     </script>
